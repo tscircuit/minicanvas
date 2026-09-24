@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.actual.png
+bun.lock*
+*.reference.png

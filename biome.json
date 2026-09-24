@@ -1,0 +1,5 @@
+{
+  "formatter": { "indentStyle": "space", "indentWidth": 2 },
+  "javascript": { "formatter": { "semicolons": "asNeeded" } },
+  "files": { "includes": ["**", "!dist", "!tests/fixtures/*.json"] }
+}
