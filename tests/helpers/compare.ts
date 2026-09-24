@@ -1,10 +1,11 @@
+import { writeComparisonSheet } from "./comparison-sheet"
 import { expect } from "bun:test"
 import { createCanvas as createNativeCanvas } from "@napi-rs/canvas"
 import { createCanvas, type MiniCanvasContext } from "../../src"
 
 export function compareDrawing(
   draw: (context: MiniCanvasContext) => void,
-  limit = 2,
+  options: { name: string; limit?: number },
 ) {
   const canvas = createCanvas({ width: 128, height: 128, antialias: 4 })
   const reference = createNativeCanvas(128, 128)
@@ -13,7 +14,15 @@ export function compareDrawing(
   const actual = canvas.toImageData().data
   const expected = reference.getContext("2d").getImageData(0, 0, 128, 128).data
   const error = pixelError(actual, expected)
-  expect(error.mean).toBeLessThan(limit)
+  // Write both outputs before assertions so failing comparisons remain reviewable.
+  writeComparisonSheet({
+    name: options.name,
+    actual,
+    expected,
+    meanError: error.mean,
+    largeDifferenceFraction: error.largeDifferenceFraction,
+  })
+  expect(error.mean).toBeLessThan(options.limit ?? 2)
   expect(error.largeDifferenceFraction).toBeLessThan(0.02)
   return canvas
 }

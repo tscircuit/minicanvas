@@ -7,13 +7,16 @@ import { compareDrawing } from "./helpers/compare"
 
 for (const rule of ["nonzero", "evenodd"] as const) {
   test(`nested polygons and ${rule} fill`, () => {
-    const canvas = compareDrawing((c) => {
-      c.fillStyle = "#db712a"
-      c.beginPath()
-      c.rect(8, 8, 110, 110)
-      c.rect(30, 30, 60, 60)
-      c.fill(rule)
-    })
+    const canvas = compareDrawing(
+      (c) => {
+        c.fillStyle = "#db712a"
+        c.beginPath()
+        c.rect(8, 8, 110, 110)
+        c.rect(30, 30, 60, 60)
+        c.fill(rule)
+      },
+      { name: `fill-${rule}` },
+    )
     expect(canvas.getContext("2d").getImageData(50, 50, 1, 1).data[3]).toBe(
       rule === "evenodd" ? 0 : 255,
     )
@@ -21,30 +24,33 @@ for (const rule of ["nonzero", "evenodd"] as const) {
 }
 
 test("path transforms captured at construction; nested clip and restore", () => {
-  compareDrawing((c) => {
-    c.translate(64, 64)
-    c.rotate(0.35)
-    c.scale(1.2, 0.7)
-    c.beginPath()
-    c.rect(-40, -40, 80, 80)
-    c.save()
-    c.clip()
-    c.resetTransform()
-    c.fillStyle = "red"
-    c.fillRect(0, 0, 128, 128)
-    c.save()
-    c.beginPath()
-    c.arc(64, 64, 30, 0, Math.PI * 2)
-    c.clip()
-    c.fillStyle = "blue"
-    c.fillRect(0, 0, 128, 128)
-    c.restore()
-    c.fillStyle = "#0f08"
-    c.fillRect(5, 50, 115, 12)
-    c.restore()
-    c.fillStyle = "white"
-    c.fillRect(0, 0, 4, 4)
-  })
+  compareDrawing(
+    (c) => {
+      c.translate(64, 64)
+      c.rotate(0.35)
+      c.scale(1.2, 0.7)
+      c.beginPath()
+      c.rect(-40, -40, 80, 80)
+      c.save()
+      c.clip()
+      c.resetTransform()
+      c.fillStyle = "red"
+      c.fillRect(0, 0, 128, 128)
+      c.save()
+      c.beginPath()
+      c.arc(64, 64, 30, 0, Math.PI * 2)
+      c.clip()
+      c.fillStyle = "blue"
+      c.fillRect(0, 0, 128, 128)
+      c.restore()
+      c.fillStyle = "#0f08"
+      c.fillRect(5, 50, 115, 12)
+      c.restore()
+      c.fillStyle = "white"
+      c.fillRect(0, 0, 4, 4)
+    },
+    { name: "transforms-nested-clip" },
+  )
 })
 
 for (const operation of [
@@ -58,105 +64,120 @@ for (const operation of [
   "lighter",
 ]) {
   test(`Porter-Duff ${operation} with partial alpha and clipping`, () => {
-    compareDrawing((c) => {
-      c.fillStyle = "rgba(255,0,0,0.6)"
-      c.fillRect(10, 10, 80, 80)
-      c.beginPath()
-      c.rect(5, 5, 115, 100)
-      c.clip()
-      c.globalCompositeOperation = operation
-      c.globalAlpha = 0.7
-      c.fillStyle = "#0080ffcc"
-      c.fillRect(50, 45, 70, 70)
-    }, 0.6)
+    compareDrawing(
+      (c) => {
+        c.fillStyle = "rgba(255,0,0,0.6)"
+        c.fillRect(10, 10, 80, 80)
+        c.beginPath()
+        c.rect(5, 5, 115, 100)
+        c.clip()
+        c.globalCompositeOperation = operation
+        c.globalAlpha = 0.7
+        c.fillStyle = "#0080ffcc"
+        c.fillRect(50, 45, 70, 70)
+      },
+      { name: `composite-${operation}`, limit: 0.6 },
+    )
   })
 }
 
 for (const cap of ["butt", "round", "square"] as const) {
   for (const join of ["miter", "round", "bevel"] as const) {
     test(`strokes: ${cap} caps, ${join} joins, dashes and nonuniform scale`, () => {
-      compareDrawing((c) => {
-        c.translate(9, 8)
-        c.scale(1.2, 0.8)
-        c.lineWidth = 8
-        c.lineCap = cap
-        c.lineJoin = join
-        c.strokeStyle = "#2776ccaa"
-        c.beginPath()
-        c.moveTo(5, 10)
-        c.lineTo(50, 45)
-        c.lineTo(75, 10)
-        c.stroke()
-        c.setLineDash([7, 3, 4])
-        c.lineDashOffset = -5
-        c.beginPath()
-        c.moveTo(3, 80)
-        c.lineTo(70, 65)
-        c.lineTo(85, 120)
-        c.stroke()
-        c.setLineDash([])
-        c.miterLimit = 2
-        c.beginPath()
-        c.moveTo(10, 120)
-        c.lineTo(30, 90)
-        c.lineTo(32, 120)
-        c.stroke()
-      })
+      compareDrawing(
+        (c) => {
+          c.translate(9, 8)
+          c.scale(1.2, 0.8)
+          c.lineWidth = 8
+          c.lineCap = cap
+          c.lineJoin = join
+          c.strokeStyle = "#2776ccaa"
+          c.beginPath()
+          c.moveTo(5, 10)
+          c.lineTo(50, 45)
+          c.lineTo(75, 10)
+          c.stroke()
+          c.setLineDash([7, 3, 4])
+          c.lineDashOffset = -5
+          c.beginPath()
+          c.moveTo(3, 80)
+          c.lineTo(70, 65)
+          c.lineTo(85, 120)
+          c.stroke()
+          c.setLineDash([])
+          c.miterLimit = 2
+          c.beginPath()
+          c.moveTo(10, 120)
+          c.lineTo(30, 90)
+          c.lineTo(32, 120)
+          c.stroke()
+        },
+        { name: `stroke-${cap}-${join}` },
+      )
     })
   }
 }
 
 test("arcs, counterclockwise arcs, rotated ellipses and arcTo", () => {
-  compareDrawing((c) => {
-    c.fillStyle = "#fc6"
-    c.beginPath()
-    c.ellipse(35, 35, 28, 13, 0.7, 0, Math.PI * 2)
-    c.fill()
-    c.strokeStyle = "#046"
-    c.lineWidth = 4
-    c.beginPath()
-    c.arc(90, 35, 22, 0, -Math.PI * 1.5, true)
-    c.stroke()
-    c.beginPath()
-    c.moveTo(10, 100)
-    c.arcTo(50, 70, 70, 120, 15)
-    c.lineTo(70, 120)
-    c.stroke()
-    c.beginPath()
-    c.moveTo(90, 110)
-    c.arcTo(70, 60, 125, 85, 10)
-    c.stroke()
-  })
+  compareDrawing(
+    (c) => {
+      c.fillStyle = "#fc6"
+      c.beginPath()
+      c.ellipse(35, 35, 28, 13, 0.7, 0, Math.PI * 2)
+      c.fill()
+      c.strokeStyle = "#046"
+      c.lineWidth = 4
+      c.beginPath()
+      c.arc(90, 35, 22, 0, -Math.PI * 1.5, true)
+      c.stroke()
+      c.beginPath()
+      c.moveTo(10, 100)
+      c.arcTo(50, 70, 70, 120, 15)
+      c.lineTo(70, 120)
+      c.stroke()
+      c.beginPath()
+      c.moveTo(90, 110)
+      c.arcTo(70, 60, 125, 85, 10)
+      c.stroke()
+    },
+    { name: "arcs-ellipses-tangents" },
+  )
 })
 
 test("clearRect ignores alpha/composite, honors clip, and leaves path intact", () => {
-  compareDrawing((c) => {
-    c.fillStyle = "orange"
-    c.fillRect(0, 0, 128, 128)
-    c.beginPath()
-    c.rect(20, 20, 80, 80)
-    c.clip()
-    c.globalAlpha = 0.1
-    c.globalCompositeOperation = "source-atop"
-    c.clearRect(10, 10, 50, 60)
-    c.globalAlpha = 1
-    c.strokeStyle = "blue"
-    c.stroke()
-  })
+  compareDrawing(
+    (c) => {
+      c.fillStyle = "orange"
+      c.fillRect(0, 0, 128, 128)
+      c.beginPath()
+      c.rect(20, 20, 80, 80)
+      c.clip()
+      c.globalAlpha = 0.1
+      c.globalCompositeOperation = "source-atop"
+      c.clearRect(10, 10, 50, 60)
+      c.globalAlpha = 1
+      c.strokeStyle = "blue"
+      c.stroke()
+    },
+    { name: "clear-rect-clipped" },
+  )
 })
 
 test("unused moveTo produces no round dot; zero length line produces a dot", () => {
-  compareDrawing((c) => {
-    c.lineCap = "round"
-    c.lineWidth = 12
-    c.beginPath()
-    c.moveTo(30, 30)
-    c.stroke()
-    c.beginPath()
-    c.moveTo(70, 70)
-    c.lineTo(70, 70)
-    c.stroke()
-  })
+  compareDrawing(
+    (c) => {
+      c.lineCap = "round"
+      c.lineWidth = 12
+      c.beginPath()
+      c.moveTo(30, 30)
+      c.stroke()
+      c.beginPath()
+      c.moveTo(70, 70)
+      c.lineTo(70, 70)
+      c.stroke()
+    },
+    { name: "zero-length-strokes" },
+  )
 })
 
 test("no-repeat layer pattern composites without erasing copper beneath", () => {
@@ -261,4 +282,51 @@ test("path coordinates survive resetTransform before fill", () => {
   c.fill()
   expect(c.getImageData(12, 12, 1, 1).data[3]).toBe(255)
   expect(c.getImageData(3, 3, 1, 1).data[3]).toBe(0)
+})
+
+for (const shape of ["arc", "ellipse", "arcTo"] as const) {
+  test(`individual ${shape} native comparison`, () => {
+    compareDrawing(
+      (context) => {
+        context.strokeStyle = "#1864ab"
+        context.fillStyle = "#f59f0080"
+        context.lineWidth = 5
+        context.beginPath()
+        if (shape === "arc") context.arc(64, 64, 40, 0.3, 5.4)
+        if (shape === "ellipse")
+          context.ellipse(64, 64, 48, 22, 0.6, 0, 2 * Math.PI)
+        if (shape === "arcTo") {
+          context.moveTo(16, 105)
+          context.arcTo(64, 10, 112, 105, 24)
+          context.lineTo(112, 105)
+        }
+        context.fill()
+        context.stroke()
+      },
+      { name: `individual-${shape}` },
+    )
+  })
+}
+
+test("offscreen pattern layer compared to native canvas", () => {
+  compareDrawing(
+    (context) => {
+      // Each renderer constructs and composites its own offscreen surface.
+      const Canvas = context.canvas
+        .constructor as typeof import("../src").MiniCanvas
+      const layer = new Canvas(128, 128)
+      const layerContext = layer.getContext("2d")
+      layerContext.fillStyle = "#1864abc0"
+      layerContext.fillRect(24, 24, 80, 80)
+      layerContext.globalCompositeOperation = "destination-out"
+      layerContext.beginPath()
+      layerContext.arc(64, 64, 20, 0, 2 * Math.PI)
+      layerContext.fill()
+      context.fillStyle = "#f59f00"
+      context.fillRect(10, 10, 108, 108)
+      context.fillStyle = context.createPattern(layer, "no-repeat")!
+      context.fillRect(0, 0, 128, 128)
+    },
+    { name: "offscreen-pattern-compositing" },
+  )
 })

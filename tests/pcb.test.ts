@@ -1,3 +1,4 @@
+import { writeComparisonSheet } from "./helpers/comparison-sheet"
 import { featureBoard } from "./fixtures/feature-board"
 import { test, expect } from "bun:test"
 import { createCanvas as nativeCanvas } from "@napi-rs/canvas"
@@ -42,10 +43,19 @@ for (const fixture of [
       reference
         .getContext("2d")
         .drawImage(referenceLarge, 0, 0, viewSize, viewSize)
-      const error = pixelError(
-        canvas.toImageData().data,
-        reference.getContext("2d").getImageData(0, 0, viewSize, viewSize).data,
-      )
+      const actual = canvas.toImageData().data
+      const expected = reference
+        .getContext("2d")
+        .getImageData(0, 0, viewSize, viewSize).data
+      const error = pixelError(actual, expected)
+      writeComparisonSheet({
+        name: `${fixture}-${view}`,
+        size: viewSize,
+        actual,
+        expected,
+        meanError: error.mean,
+        largeDifferenceFraction: error.largeDifferenceFraction,
+      })
       console.log(
         `${fixture}/${view}: mean=${error.mean.toFixed(3)}, >64/channel=${(100 * error.largeDifferenceFraction).toFixed(2)}%`,
       )
