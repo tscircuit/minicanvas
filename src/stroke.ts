@@ -21,7 +21,7 @@ function dashed(path: Subpath, style: StrokeStyle): Subpath[] {
   if (total === 0) return [path]
   let offset = ((style.offset % total) + total) % total,
     index = 0
-  while (offset >= style.dash[index]) {
+  while (offset > 0 && offset >= style.dash[index]) {
     offset -= style.dash[index]
     index = (index + 1) % style.dash.length
   }
@@ -38,6 +38,14 @@ function dashed(path: Subpath, style: StrokeStyle): Subpath[] {
         if (current.length) {
           result.push({ points: current, closed: false })
           current = []
+        }
+        // Zero-length on intervals still have round caps (dotted lines).
+        if (style.dash[index] === 0 && index % 2 === 0) {
+          const point = {
+            x: a.x + ((b.x - a.x) * position) / length,
+            y: a.y + ((b.y - a.y) * position) / length,
+          }
+          result.push({ points: [point, point], closed: false })
         }
         index = (index + 1) % style.dash.length
         remaining = style.dash[index]
