@@ -1,9 +1,10 @@
 import { test, expect } from "bun:test"
 import { runInNewContext } from "node:vm"
+import { fileURLToPath } from "node:url"
 
 test("browser bundle runs without Node, DOM, native addons or WASM", async () => {
   const result = await Bun.build({
-    entrypoints: [new URL("../src/index.ts", import.meta.url).pathname],
+    entrypoints: [fileURLToPath(new URL("../src/index.ts", import.meta.url))],
     target: "browser",
     format: "esm",
   })
